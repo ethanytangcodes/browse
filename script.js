@@ -640,47 +640,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Error handler
     async function contentFetchingProtocolValidateAll() {
         let contentFetchingProtocolInvalidDetected = false;
-        for (const contentFetchingProtocolElement of contentFetchingProtocolElements) {
-            if (!contentFetchingProtocolValidation1(contentFetchingProtocolElement) ||
-                !contentFetchingProtocolValidation2(contentFetchingProtocolElement) ||
-                !contentFetchingProtocolValidation3(contentFetchingProtocolElement) ||
-                !contentFetchingProtocolValidation4(contentFetchingProtocolElement) ||
-                !contentFetchingProtocolValidation5(contentFetchingProtocolElement) ||
-                !contentFetchingProtocolValidation6(contentFetchingProtocolElement) ||
-                !(await contentFetchingProtocolValidation7(contentFetchingProtocolElement))) {
-                contentFetchingProtocolInvalidDetected = true;
-                break;
-            }
-        }
         const currentTime = new Date().toISOString().replace('T', ' ').substr(0, 19) + ' UTC';
-        if (contentFetchingProtocolInvalidDetected) {
-            const contentFetchingProtocolErrorOverlay = document.createElement('div');
-            contentFetchingProtocolErrorOverlay.className = 'Q2wE4rT6y8U0';
-            contentFetchingProtocolErrorOverlay.textContent = `𝗘𝗿𝗿𝗼𝗿: Unhandled Exception in Processor Module 'dataProcessor'
-
-𝗘𝗿𝗿𝗼𝗿 𝗖𝗼𝗱𝗲: 0xA17b2cf3DeU4sE5f6a93B47cJs
-
-𝗧𝗶𝗺𝗲𝘀𝘁𝗮𝗺𝗽: ${currentTime}
-
-𝗗𝗲𝘀𝗰𝗿𝗶𝗽𝘁𝗶𝗼𝗻: An unexpected null reference was encountered during processing execution. This may indicate improper formatting of input data, malicious or malformed XML injection attempts, or a failure in the preceding validation checks.
-
-𝗦𝘁𝗮𝗰𝗸 𝗧𝗿𝗮𝗰𝗲:  
-1. mainApp.Startup()
-2. mainApp.Run()
-3. urlFetchRequested()
-➥ urlFetchRequested.Approved()
-4. fetchedSiteProcessor.ParseInput()  
-5. dataProcessor.ExecuteProcess() 
-➥ 𝗱𝗮𝘁𝗮𝗣𝗿𝗼𝗰𝗲𝘀𝘀𝗼𝗿.𝗘𝘅𝗲𝗰𝘂𝘁𝗲𝗣𝗿𝗼𝗰𝗲𝘀𝘀.𝗙𝗮𝗶𝗹𝗲𝗱()
-
-𝗦𝘂𝗴𝗴𝗲𝘀𝘁𝗲𝗱 𝗔𝗰𝘁𝗶𝗼𝗻𝘀:
-• Ensure that the input data is correctly formatted and not null.
-• Scrub any injection attempts.
-• Review the initialization sequence for all dependent objects.
-• Check the logs for any preceding errors that may provide context.
-• Clear browser cache and clear and reset website data storage.
-`;
-            document.body.appendChild(contentFetchingProtocolErrorOverlay);
+      
         }
     }
 
