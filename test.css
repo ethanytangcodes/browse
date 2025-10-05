@@ -1,0 +1,97 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(145deg, #1c1c1e, #222227);
+  color: #e0e0ff;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-size: 17px;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+}
+
+.search-baraa, .uptop-baraa, .browser-baraa, .sidebarvv, .chatbot, .modal-contentgg, .sitechecker-container, .dropdown-contentaa, .dropdown-menuccc {
+  background: rgba(40, 40, 50, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(130, 100, 255, 0.5);
+}
+
+.search-baraa input, .browser-baraa .address-baraa input, .chat-input textarea {
+  color: #e0e0ff;
+}
+
+.cloak-buttonaa, .clear-buttonaa, .content-containervv button, .copy-buttongg, .close-buttongg {
+  background: linear-gradient(135deg, #7f5fff, #5fd1ff);
+  color: #fff;
+  border: none;
+}
+
+.cloak-buttonaa:hover, .clear-buttonaa:hover, .content-containervv button:hover, .copy-buttongg:hover, .close-buttongg:hover {
+  background: linear-gradient(135deg, #a285ff, #70e0ff);
+}
+
+.uptop-baraa .tabaa {
+  background: rgba(60, 60, 80, 0.6);
+  color: #d1d0ff;
+}
+
+.uptop-baraa .tabaa.activeaa {
+  background: rgba(100, 80, 255, 0.5);
+  color: #fff;
+}
+
+.uptop-baraa .tabaa.activeaa::after {
+  background-color: #a285ff;
+}
+
+.browser-baraa .address-baraa {
+  background: rgba(60, 60, 80, 0.4);
+}
+
+.browser-baraa button, .uptop-baraa .add-tabaa, .top-right-boxaa, .Xt7Lm9Kp3R8f, .sidebarvv button {
+  color: #c4c0ff;
+}
+
+.browser-baraa button:hover, .uptop-baraa .add-tabaa:hover, .top-right-boxaa:hover, .Xt7Lm9Kp3R8f:hover, .sidebarvv button:hover {
+  color: #fff;
+}
+
+.chatbox .chat p {
+  background: linear-gradient(135deg, #7f5fff, #5fd1ff);
+  color: #fff;
+}
+
+.chatbox .incoming p {
+  background: rgba(60, 60, 80, 0.6);
+  border: 2px solid #7f5fff;
+}
+
+.header-bar {
+  background: rgba(100, 80, 255, 0.3);
+}
+
+.tab-contentaa, .browser-content, .browser-content-lightmode {
+  background: rgba(30, 30, 50, 0.5);
+}
+
+.tab-contentaa h20, .tab-contentaa h21, .tab-contentaa h22, .tab-contentaa h23, .tab-contentaa h24 {
+  color: #d0d0ff;
+}
+
+.tab-contentaa h21::after, .tab-contentaa h23, .titlelinee, .titlelinee-lightmode {
+  background-color: #7f5fff;
+}
+
+.theme-preview .browser-simulation, .theme-preview-lightmode .browser-simulation-lightmode {
+  border-color: #7f5fff;
+}
+
+.spinner, .dropdown-contentaa, .dropdown-menuccc {
+  border-color: #7f5fff;
+}
+
+.sidebarvv button.active::after, .wrench-buttonaa::after {
+  background-color: #7f5fff;
+}
