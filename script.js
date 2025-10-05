@@ -12,13 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // List of official Helios URLs
     const officialUrls = [
-        "https://ethanytangcodes.github.io/",
-        "https://helios-browser.vercel.app/",
-        "https://helios-blue.vercel.app/",
-        "https://helios-browser.rf.gd",
-        "https://helios-browser.w3spaces.com/",
-        "https://helios-browser.pages.dev/",
-        "https://helios-browser.ct.ws"
+        "https://ethanytangcodes.github.io/browse/"
     ];
 
     function normalizeUrl(url) {
