@@ -1614,6 +1614,7 @@ body.show-chatbot .chatbot {
   color: #007BFF;
 }
 
+
 .login-overlay {
   position: fixed;
   top: 0;
@@ -1626,9 +1627,15 @@ body.show-chatbot .chatbot {
   align-items: center;
   z-index: 9999;
   font-family: 'Poppins', sans-serif;
+  opacity: 1;
+  transition: opacity 0.4s ease;
 }
 
-/* Login box */
+.login-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .login-box {
   background-color: #fff;
   padding: 30px 25px;
@@ -1642,14 +1649,12 @@ body.show-chatbot .chatbot {
   gap: 15px;
 }
 
-/* Modal title */
 .login-box h2 {
   margin-bottom: 10px;
   font-weight: 600;
   color: #333;
 }
 
-/* Inputs */
 .login-box input[type="text"],
 .login-box input[type="password"] {
   padding: 12px 15px;
@@ -1666,7 +1671,6 @@ body.show-chatbot .chatbot {
   box-shadow: 0 0 5px rgba(0,0,0,0.1);
 }
 
-/* Login button */
 #loginBtn {
   padding: 12px 15px;
   background-color: #4a90e2;
@@ -1683,9 +1687,14 @@ body.show-chatbot .chatbot {
   transform: translateY(-2px);
 }
 
-/* Error message */
 #loginError {
   font-size: 13px;
   color: #ff7070;
-  display: none; /* shown via JS on error */
+  display: none;
+}
+
+/* Example main content */
+#mainContent {
+  padding: 50px;
+  text-align: center;
 }
