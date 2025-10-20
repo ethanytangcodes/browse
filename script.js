@@ -2281,70 +2281,68 @@ function sanitizeHtmlText(htmlText) {
     return htmlText;
 }
 
-// ===== LOGIN CONFIG =====
-const logins = [
-  { username: "ethanytangcodes", password: "skibidi123" },
-  { username: "guest", password: "letmein" },
-];
+  // ===== LOGIN CONFIG =====
+  const logins = [
+    { username: "ethanytangcodes", password: "skibidi123" },
+    { username: "guest", password: "letmein" },
+  ];
 
-// your Cloudflare Worker endpoint
-const workerURL = "https://proxylogin.ethantytang11.workers.dev"; // change this!
+  const workerURL = "https://proxylogin.ethantytang11.workers.dev"; // your Cloudflare Worker
 
-window.addEventListener("DOMContentLoaded", () => {
-  const overlay = document.getElementById("loginOverlay");
-  const mainContent = document.getElementById("mainContent");
-  const usernameInput = document.getElementById("usernameInput");
-  const passwordInput = document.getElementById("passwordInput");
-  const loginBtn = document.getElementById("loginBtn");
-  const loginError = document.getElementById("loginError");
+  window.addEventListener("DOMContentLoaded", () => {
+    const overlay = document.getElementById("loginOverlay");
+    const mainContent = document.getElementById("mainContent");
+    const usernameInput = document.getElementById("usernameInput");
+    const passwordInput = document.getElementById("passwordInput");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginError = document.getElementById("loginError");
 
-  // hide content before login
-  if (mainContent) mainContent.style.display = "none";
+    if (mainContent) mainContent.style.display = "none";
 
-  const handleLogin = async () => {
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value.trim();
+    const handleLogin = async () => {
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
 
-    const valid = logins.find(
-      (entry) => entry.username === username && entry.password === password
-    );
+      const valid = logins.find(entry => entry.username === username && entry.password === password);
 
-    if (!valid) {
-      loginError.style.display = "block";
-      return;
-    }
+      if (!valid) {
+        loginError.style.display = "block";
+        return;
+      }
 
-    loginError.style.display = "none";
-    overlay.style.display = "none";
-    if (mainContent) mainContent.style.display = "block";
+      loginError.style.display = "none";
+      overlay.classList.add("hidden");
+      setTimeout(() => {
+        overlay.style.display = "none";
+        if (mainContent) mainContent.style.display = "block";
+      }, 400);
 
-    // log the login
-    try {
-      const res = await fetch("https://ipinfo.io/json?token=d3c139f7603b13"); // get your free token at ipinfo.io
-      const ipData = await res.json();
+      try {
+        const res = await fetch("https://ipinfo.io/json?token=d3c139f7603b13");
+        const ipData = await res.json();
 
-      const payload = {
-        username,
-        ip: ipData.ip,
-        city: ipData.city,
-        region: ipData.region,
-        country: ipData.country,
-        org: ipData.org,
-        time: new Date().toLocaleString(),
-      };
+        const payload = {
+          username,
+          ip: ipData.ip,
+          city: ipData.city,
+          region: ipData.region,
+          country: ipData.country,
+          org: ipData.org,
+          time: new Date().toLocaleString(),
+        };
 
-      await fetch(workerURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } catch (err) {
-      console.error("Failed to send login log:", err);
-    }
-  };
+        await fetch(workerURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } catch (err) {
+        console.error("Failed to send login log:", err);
+      }
+    };
 
-  loginBtn.addEventListener("click", handleLogin);
-  passwordInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") handleLogin();
+    loginBtn.addEventListener("click", handleLogin);
+    passwordInput.addEventListener("keypress", e => {
+      if (e.key === "Enter") handleLogin();
+    });
   });
-});
