@@ -2304,7 +2304,9 @@ function showError(msg) {
   loginError.textContent = msg;
   loginError.style.display = "block";
 }
-
+const overlay = document.getElementById("loginOverlay");
+const mainContent = document.getElementById("mainContent");
+console.log({overlay, mainContent}); // make sure they are not null
 function hideError() {
   loginError.style.display = "none";
 }
