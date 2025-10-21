@@ -2281,148 +2281,125 @@ function sanitizeHtmlText(htmlText) {
     return htmlText;
 }
 
-// ===== CONFIG =====
-// Add as many username/password pairs as you want here:
+// script.js — full working version
+
+// ------------------- CONFIG -------------------
 const logins = [
   { username: "ethanytangcodes", password: "skibidi123" },
   { username: "guest", password: "letmein" },
   { username: "admin", password: "helios" },
+  { username: "user1", password: "pass1" }
 ];
 
-// Cloudflare Worker endpoint that logs to Discord
-const workerURL = "https://proxylogin.ethantytang11.workers.dev"; // replace if different
+const workerURL = "https://proxylogin.ethantytang11.workers.dev/"; // your Worker URL
 
-// ===== DOM refs & helpers =====
+// ------------------- DOM ELEMENTS -------------------
 const overlay = document.getElementById("loginOverlay");
-const mainContent = document.getElementById("mainContent");
 const usernameInput = document.getElementById("usernameInput");
 const passwordInput = document.getElementById("passwordInput");
 const loginBtn = document.getElementById("loginBtn");
 const loginError = document.getElementById("loginError");
 
+// Hide overlay initially if needed
+const mainContent = document.getElementById("mainContent");
+if (mainContent) mainContent.style.display = "none";
+
+// ------------------- FUNCTIONS -------------------
 function showError(msg) {
   loginError.textContent = msg;
   loginError.style.display = "block";
 }
-const overlay = document.getElementById("loginOverlay");
-const mainContent = document.getElementById("mainContent");
-console.log({overlay, mainContent}); // make sure they are not null
+
 function hideError() {
   loginError.style.display = "none";
 }
 
 function setBusy(isBusy) {
-  loginBtn.disabled = !!isBusy;
-  if (isBusy) loginBtn.textContent = "Checking…";
-  else loginBtn.textContent = "Login";
+  loginBtn.disabled = isBusy;
+  loginBtn.textContent = isBusy ? "Checking…" : "Login";
 }
 
-// Safety checks
-if (!overlay || !mainContent || !usernameInput || !passwordInput || !loginBtn || !loginError) {
-  console.error("Login elements missing. IDs required: loginOverlay, mainContent, usernameInput, passwordInput, loginBtn, loginError");
+function hideOverlay() {
+  overlay.style.opacity = 0;
+  overlay.style.pointerEvents = "none";
+  setTimeout(() => {
+    overlay.style.display = "none";
+    if (mainContent) mainContent.style.display = "block";
+  }, 300);
 }
 
-// hide main content until success
-if (mainContent) mainContent.style.display = "none";
+async function logAttempt(username, result) {
+  const timestamp = new Date().toISOString();
+  const userAgent = navigator.userAgent;
 
-// try to fetch ipinfo (non-blocking fallback)
-async function fetchIpInfo() {
+  let ipData = {};
   try {
     const res = await fetch("https://ipinfo.io/json?token=d3c139f7603b13");
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (err) {
-    return null;
-  }
-}
+    if (res.ok) ipData = await res.json();
+  } catch {}
 
-// send payload to worker, don't block UX on failure
-async function logToWorker(payload) {
+  const payload = {
+    username,
+    result,
+    time: timestamp,
+    userAgent,
+    ip: ipData.ip || null,
+    city: ipData.city || null,
+    region: ipData.region || null,
+    country: ipData.country || null,
+    org: ipData.org || null
+  };
+
   try {
     await fetch(workerURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
   } catch (err) {
-    console.warn("Worker logging failed:", err);
+    console.warn("Logging failed:", err);
   }
 }
 
-// main verification function
-async function verifyAndProceed() {
+async function verifyLogin() {
   hideError();
   setBusy(true);
 
-  const username = (usernameInput.value || "").trim();
-  const password = (passwordInput.value || "").trim();
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value.trim();
 
   if (!username || !password) {
-    showError("Please fill both username and password.");
+    showError("Please enter both username and password.");
     setBusy(false);
     return;
   }
 
-  // local check: find an entry in the logins array
-  const match = logins.find(l => l.username === username && l.password === password);
-
-  // gather ipinfo & userAgent for payload
-  const ipInfoPromise = fetchIpInfo(); // do in parallel
-  const userAgent = navigator.userAgent;
-
+  const match = logins.find(u => u.username === username && u.password === password);
   if (!match) {
-    // log failed attempt (non-blocking)
-    const ipInfo = await ipInfoPromise;
-    const payloadFail = {
-      username,
-      result: "failed",
-      time: new Date().toISOString(),
-      userAgent,
-      ip: ipInfo?.ip || null,
-      city: ipInfo?.city || null,
-      region: ipInfo?.region || null,
-      country: ipInfo?.country || null,
-      org: ipInfo?.org || null
-    };
-    void logToWorker(payloadFail);
-
     showError("Invalid username or password.");
+    await logAttempt(username, "failed");
     setBusy(false);
     return;
   }
 
-  // success path
-  const ipInfo = await ipInfoPromise;
-  const payloadSuccess = {
-    username,
-    result: "success",
-    time: new Date().toISOString(),
-    userAgent,
-    ip: ipInfo?.ip || null,
-    city: ipInfo?.city || null,
-    region: ipInfo?.region || null,
-    country: ipInfo?.country || null,
-    org: ipInfo?.org || null
-  };
-
-  // hide overlay with a neat fade
-  overlay.classList.add("fade-out");
-  setTimeout(() => {
-    overlay.style.display = "none";
-    mainContent.style.display = ""; // show
-  }, 320);
-
-  // send log (non-blocking)
-  void logToWorker(payloadSuccess);
+  // successful login
+  await logAttempt(username, "success");
+  hideOverlay();
   setBusy(false);
 }
 
-// events
-loginBtn.addEventListener("click", verifyAndProceed);
+// ------------------- EVENT LISTENERS -------------------
+loginBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  void verifyLogin();
+});
 
-// allow Enter to submit on password (and username)
-[usernameInput, passwordInput].forEach(el => {
-  el.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") verifyAndProceed();
+[usernameInput, passwordInput].forEach(input => {
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      void verifyLogin();
+    }
   });
 });
+
