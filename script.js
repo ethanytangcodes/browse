@@ -2281,68 +2281,146 @@ function sanitizeHtmlText(htmlText) {
     return htmlText;
 }
 
-  // ===== LOGIN CONFIG =====
-  const logins = [
-    { username: "ethanytangcodes", password: "skibidi123" },
-    { username: "guest", password: "letmein" },
-  ];
+// ===== CONFIG =====
+// Add as many username/password pairs as you want here:
+const logins = [
+  { username: "ethanytangcodes", password: "skibidi123" },
+  { username: "guest", password: "letmein" },
+  { username: "admin", password: "helios" },
+];
 
-  const workerURL = "https://proxylogin.ethantytang11.workers.dev"; // your Cloudflare Worker
+// Cloudflare Worker endpoint that logs to Discord
+const workerURL = "https://proxylogin.ethantytang11.workers.dev"; // replace if different
 
-  window.addEventListener("DOMContentLoaded", () => {
-    const overlay = document.getElementById("loginOverlay");
-    const mainContent = document.getElementById("mainContent");
-    const usernameInput = document.getElementById("usernameInput");
-    const passwordInput = document.getElementById("passwordInput");
-    const loginBtn = document.getElementById("loginBtn");
-    const loginError = document.getElementById("loginError");
+// ===== DOM refs & helpers =====
+const overlay = document.getElementById("loginOverlay");
+const mainContent = document.getElementById("mainContent");
+const usernameInput = document.getElementById("usernameInput");
+const passwordInput = document.getElementById("passwordInput");
+const loginBtn = document.getElementById("loginBtn");
+const loginError = document.getElementById("loginError");
 
-    if (mainContent) mainContent.style.display = "none";
+function showError(msg) {
+  loginError.textContent = msg;
+  loginError.style.display = "block";
+}
 
-    const handleLogin = async () => {
-      const username = usernameInput.value.trim();
-      const password = passwordInput.value.trim();
+function hideError() {
+  loginError.style.display = "none";
+}
 
-      const valid = logins.find(entry => entry.username === username && entry.password === password);
+function setBusy(isBusy) {
+  loginBtn.disabled = !!isBusy;
+  if (isBusy) loginBtn.textContent = "Checking…";
+  else loginBtn.textContent = "Login";
+}
 
-      if (!valid) {
-        loginError.style.display = "block";
-        return;
-      }
+// Safety checks
+if (!overlay || !mainContent || !usernameInput || !passwordInput || !loginBtn || !loginError) {
+  console.error("Login elements missing. IDs required: loginOverlay, mainContent, usernameInput, passwordInput, loginBtn, loginError");
+}
 
-      loginError.style.display = "none";
-      overlay.classList.add("hidden");
-      setTimeout(() => {
-        overlay.style.display = "none";
-        if (mainContent) mainContent.style.display = "block";
-      }, 400);
+// hide main content until success
+if (mainContent) mainContent.style.display = "none";
 
-      try {
-        const res = await fetch("https://ipinfo.io/json?token=d3c139f7603b13");
-        const ipData = await res.json();
+// try to fetch ipinfo (non-blocking fallback)
+async function fetchIpInfo() {
+  try {
+    const res = await fetch("https://ipinfo.io/json?token=d3c139f7603b13");
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    return null;
+  }
+}
 
-        const payload = {
-          username,
-          ip: ipData.ip,
-          city: ipData.city,
-          region: ipData.region,
-          country: ipData.country,
-          org: ipData.org,
-          time: new Date().toLocaleString(),
-        };
-
-        await fetch(workerURL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } catch (err) {
-        console.error("Failed to send login log:", err);
-      }
-    };
-
-    loginBtn.addEventListener("click", handleLogin);
-    passwordInput.addEventListener("keypress", e => {
-      if (e.key === "Enter") handleLogin();
+// send payload to worker, don't block UX on failure
+async function logToWorker(payload) {
+  try {
+    await fetch(workerURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
+  } catch (err) {
+    console.warn("Worker logging failed:", err);
+  }
+}
+
+// main verification function
+async function verifyAndProceed() {
+  hideError();
+  setBusy(true);
+
+  const username = (usernameInput.value || "").trim();
+  const password = (passwordInput.value || "").trim();
+
+  if (!username || !password) {
+    showError("Please fill both username and password.");
+    setBusy(false);
+    return;
+  }
+
+  // local check: find an entry in the logins array
+  const match = logins.find(l => l.username === username && l.password === password);
+
+  // gather ipinfo & userAgent for payload
+  const ipInfoPromise = fetchIpInfo(); // do in parallel
+  const userAgent = navigator.userAgent;
+
+  if (!match) {
+    // log failed attempt (non-blocking)
+    const ipInfo = await ipInfoPromise;
+    const payloadFail = {
+      username,
+      result: "failed",
+      time: new Date().toISOString(),
+      userAgent,
+      ip: ipInfo?.ip || null,
+      city: ipInfo?.city || null,
+      region: ipInfo?.region || null,
+      country: ipInfo?.country || null,
+      org: ipInfo?.org || null
+    };
+    void logToWorker(payloadFail);
+
+    showError("Invalid username or password.");
+    setBusy(false);
+    return;
+  }
+
+  // success path
+  const ipInfo = await ipInfoPromise;
+  const payloadSuccess = {
+    username,
+    result: "success",
+    time: new Date().toISOString(),
+    userAgent,
+    ip: ipInfo?.ip || null,
+    city: ipInfo?.city || null,
+    region: ipInfo?.region || null,
+    country: ipInfo?.country || null,
+    org: ipInfo?.org || null
+  };
+
+  // hide overlay with a neat fade
+  overlay.classList.add("fade-out");
+  setTimeout(() => {
+    overlay.style.display = "none";
+    mainContent.style.display = ""; // show
+  }, 320);
+
+  // send log (non-blocking)
+  void logToWorker(payloadSuccess);
+  setBusy(false);
+}
+
+// events
+loginBtn.addEventListener("click", verifyAndProceed);
+
+// allow Enter to submit on password (and username)
+[usernameInput, passwordInput].forEach(el => {
+  el.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") verifyAndProceed();
   });
+});
