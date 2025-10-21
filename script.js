@@ -1,3 +1,16 @@
+
+(function(){
+  const authUrl = "https://ethanytangcodes.github.io/browse/auth.html"; // replace with your auth.html location
+  try {
+    const logged = localStorage.getItem('helios_logged_in') === '1';
+    if (logged) return; // allowed
+  } catch(e){}
+
+  // not logged -> redirect to auth
+  const current = location.href;
+  location.replace(`${authUrl}?returnTo=${encodeURIComponent(current)}`);
+})();
+
 document.querySelector('.reload-buttonaa').addEventListener('mouseenter', function() {
   this.classList.add('hover-triggered');
 });
