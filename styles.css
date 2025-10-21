@@ -1628,6 +1628,11 @@ body.show-chatbot .chatbot {
   align-items: center;
   z-index: 9999;
 }
+.login-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.32s ease;
+}
 
 /* Login box styling */
 .login-box {
