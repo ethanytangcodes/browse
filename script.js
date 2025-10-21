@@ -2281,9 +2281,8 @@ function sanitizeHtmlText(htmlText) {
     return htmlText;
 }
 
-// script.js — full working version
+// script.js — FULL LOCKDOWN LOGIN
 
-// ------------------- CONFIG -------------------
 const logins = [
   { username: "ethanytangcodes", password: "skibidi123" },
   { username: "guest", password: "letmein" },
@@ -2291,20 +2290,19 @@ const logins = [
   { username: "user1", password: "pass1" }
 ];
 
-const workerURL = "https://proxylogin.ethantytang11.workers.dev/"; // your Worker URL
+const workerURL = "https://proxylogin.ethantytang11.workers.dev/";
 
-// ------------------- DOM ELEMENTS -------------------
+// Overlay elements
 const overlay = document.getElementById("loginOverlay");
 const usernameInput = document.getElementById("usernameInput");
 const passwordInput = document.getElementById("passwordInput");
 const loginBtn = document.getElementById("loginBtn");
 const loginError = document.getElementById("loginError");
 
-// Hide overlay initially if needed
-const mainContent = document.getElementById("mainContent");
-if (mainContent) mainContent.style.display = "none";
+// Disable everything underneath overlay
+document.body.style.pointerEvents = "none";
+overlay.style.pointerEvents = "auto"; // overlay still clickable
 
-// ------------------- FUNCTIONS -------------------
 function showError(msg) {
   loginError.textContent = msg;
   loginError.style.display = "block";
@@ -2319,42 +2317,12 @@ function setBusy(isBusy) {
   loginBtn.textContent = isBusy ? "Checking…" : "Login";
 }
 
-function hideOverlay() {
-  overlay.style.opacity = 0;
-  overlay.style.pointerEvents = "none";
-  setTimeout(() => {
-    overlay.style.display = "none";
-    if (mainContent) mainContent.style.display = "block";
-  }, 300);
-}
-
 async function logAttempt(username, result) {
-  const timestamp = new Date().toISOString();
-  const userAgent = navigator.userAgent;
-
-  let ipData = {};
-  try {
-    const res = await fetch("https://ipinfo.io/json?token=d3c139f7603b13");
-    if (res.ok) ipData = await res.json();
-  } catch {}
-
-  const payload = {
-    username,
-    result,
-    time: timestamp,
-    userAgent,
-    ip: ipData.ip || null,
-    city: ipData.city || null,
-    region: ipData.region || null,
-    country: ipData.country || null,
-    org: ipData.org || null
-  };
-
   try {
     await fetch(workerURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ username, result })
     });
   } catch (err) {
     console.warn("Logging failed:", err);
@@ -2382,13 +2350,17 @@ async function verifyLogin() {
     return;
   }
 
-  // successful login
+  // SUCCESS
   await logAttempt(username, "success");
-  hideOverlay();
+
+  // Remove overlay and enable everything else
+  overlay.style.display = "none";
+  document.body.style.pointerEvents = "auto";
+
   setBusy(false);
 }
 
-// ------------------- EVENT LISTENERS -------------------
+// Event listeners
 loginBtn.addEventListener("click", (e) => {
   e.preventDefault();
   void verifyLogin();
