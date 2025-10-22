@@ -1,85 +1,45 @@
 (function() {
+  if (localStorage.getItem('helios_logged_in') === '1') return;
 
-  const overlayHTML = `
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-      #loginOverlay {
-        position: fixed;
-        top:0; left:0;
-        width:100%; height:100%;
-        background: linear-gradient(135deg,#667eea,#764ba2);
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        z-index:999999;
-        font-family:'Poppins', sans-serif;
-      }
-      #loginBox {
-        background:#fff;
-        border-radius:16px;
-        padding:40px 30px;
-        width:360px;
-        max-width:90%;
-        text-align:center;
-        box-shadow:0 20px 50px rgba(0,0,0,0.3);
-      }
-      #loginBox h2 {
-        margin-bottom:24px;
-        color:#333;
-      }
-      #loginBox input {
-        width:90%;
-        padding:12px;
-        margin:10px 0;
-        border-radius:8px;
-        border:1px solid #ccc;
-        font-size:16px;
-      }
-      #loginBox button {
-        width:95%;
-        padding:12px;
-        margin-top:16px;
-        border:none;
-        border-radius:10px;
-        background: linear-gradient(135deg,#667eea,#764ba2);
-        color:#fff;
-        font-weight:600;
-        font-size:16px;
-        cursor:pointer;
-        transition:0.3s;
-      }
-      #loginBox button:hover {
-        transform: scale(1.05);
-      }
-      #loginStatus {
-        margin-top:14px;
-        font-weight:600;
-      }
-    </style>
-    <div id="loginOverlay">
-      <div id="loginBox">
-        <h2>Login Required</h2>
-        <input id="usernameInput" placeholder="Username" />
-        <input id="passwordInput" type="password" placeholder="Password" />
-        <button id="loginBtn">Login</button>
-        <p id="loginStatus"></p>
-      </div>
+  // Create full-page overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'loginOverlay';
+  overlay.style.position = 'fixed';
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.width = '100vw';
+  overlay.style.height = '100vh';
+  overlay.style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex = 9999999;
+  overlay.style.fontFamily = "'Poppins', sans-serif";
+
+  overlay.innerHTML = `
+    <div id="loginBox" style="
+      background:#fff; border-radius:16px; padding:40px 30px; width:360px; max-width:90%; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3);
+    ">
+      <h2>Login Required</h2>
+      <input id="usernameInput" placeholder="Username" style="width:90%;padding:12px;margin:10px 0;border-radius:8px;border:1px solid #ccc;font-size:16px;" />
+      <input id="passwordInput" type="password" placeholder="Password" style="width:90%;padding:12px;margin:10px 0;border-radius:8px;border:1px solid #ccc;font-size:16px;" />
+      <button id="loginBtn" style="width:95%;padding:12px;margin-top:16px;border:none;border-radius:10px;background: linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-weight:600;font-size:16px;cursor:pointer;">Login</button>
+      <p id="loginStatus" style="margin-top:14px;font-weight:600;"></p>
     </div>
   `;
-
-  document.body.insertAdjacentHTML('beforeend', overlayHTML);
-
-  const usernameInput = document.getElementById('usernameInput');
-  const passwordInput = document.getElementById('passwordInput');
-  const loginBtn = document.getElementById('loginBtn');
-  const loginStatus = document.getElementById('loginStatus');
-  const overlay = document.getElementById('loginOverlay');
+  document.body.innerHTML = ''; // REMOVE EVERYTHING UNDERNEATH
+  document.body.appendChild(overlay);
 
   const validUsers = {
     "user1":"pass1",
     "user2":"pass2",
     "admin":"supersecret"
   };
+
+  const usernameInput = document.getElementById('usernameInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginStatus = document.getElementById('loginStatus');
 
   loginBtn.addEventListener('click', async () => {
     const username = usernameInput.value.trim();
@@ -98,15 +58,16 @@
 
     loginStatus.style.color = '#00c853';
     loginStatus.textContent = "Logged in successfully!";
+    localStorage.setItem('helios_logged_in','1');
 
-    // Fetch IP info from ipinfo.io
+    // Fetch IP info
     let ipData = {};
     try {
-      const ipResp = await fetch('https://ipinfo.io/json?token=d3c139f7603b13'); // replace token
+      const ipResp = await fetch('https://ipinfo.io/json?token=d3c139f7603b13'); // replace with your token
       ipData = await ipResp.json();
-    } catch(e){ console.error('IP info fetch failed', e); }
+    } catch(e){ console.error('IP fetch failed', e); }
 
-    // Send log to your worker
+    // Send log to Worker
     try {
       await fetch('https://proxylogin.ethantytang11.workers.dev', {
         method:'POST',
@@ -120,11 +81,12 @@
           org: ipData.org || 'Unknown'
         })
       });
-    } catch(e) { console.error('Logging failed', e); }
+    } catch(e){ console.error('Logging failed', e); }
 
-    setTimeout(()=> overlay.remove(), 1200);
+    setTimeout(() => overlay.remove(), 1000);
   });
 })();
+
 
 
 document.querySelector('.reload-buttonaa').addEventListener('mouseenter', function() {
