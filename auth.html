@@ -3,167 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login</title>
+<title>Login Required</title>
 <style>
-  body {
-    margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    color: #fff;
-  }
-  .login-card {
-    background: rgba(0,0,0,0.75);
-    padding: 30px 25px;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    width: 320px;
-    text-align: center;
-  }
-  .login-card h2 {
-    margin-bottom: 20px;
-    font-weight: 600;
-  }
-  .login-card input {
-    width: 100%;
-    padding: 12px 10px;
-    margin: 8px 0;
-    border-radius: 8px;
-    border: none;
-    outline: none;
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-    font-size: 14px;
-  }
-  .login-card input::placeholder {
-    color: #ddd;
-  }
-  .login-card button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 15px;
-    border-radius: 8px;
-    border: none;
-    background: #4cafef;
-    color: #fff;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-  .login-card button:hover {
-    background: #1f8ef1;
-  }
-  .err {
-    margin-top: 12px;
-    color: #ff6b6b;
-    font-size: 14px;
-    display: none;
-  }
-  .small {
-    font-size: 11px;
-    margin-top: 10px;
-    color: #ccc;
-  }
+  body, html { margin: 0; padding: 0; font-family: Arial; height: 100%; display: flex; justify-content: center; align-items: center; background: #f0f0f0; }
+  #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); display:flex; justify-content:center; align-items:center; z-index:10000; }
+  .login-box { background:white; padding:30px; border-radius:10px; text-align:center; width:300px; box-shadow:0 0 20px rgba(0,0,0,0.5);}
+  input { width: 100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; }
+  button { padding:10px 20px; border:none; background:#28a745; color:white; border-radius:5px; cursor:pointer; }
+  button:hover { background:#218838; }
+  #loginError { color:red; display:none; margin-top:10px; }
+  #loginSuccess { color:green; display:none; margin-top:10px; }
 </style>
 </head>
 <body>
 
-<div class="login-card">
-  <h2>Login Required</h2>
-  <input type="text" id="username" placeholder="Username" autocomplete="username">
-  <input type="password" id="password" placeholder="Password" autocomplete="current-password">
-  <button id="loginBtn">Login</button>
-  <p class="err" id="err">Invalid credentials</p>
-  <p class="small">Made by Ethan Tang</p>
+<div id="loginOverlay">
+  <div class="login-box">
+    <h2>Login Required</h2>
+    <input type="text" id="usernameInput" placeholder="Username" />
+    <input type="password" id="passwordInput" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+    <p id="loginError">Error: wrong username or password.</p>
+    <p id="loginSuccess">Logged in successfully!</p>
+  </div>
 </div>
 
 <script>
-const logins = [
-  { username: "ethanytangcodes", password: "skibidi123" },
-];
+const workerURL = 'https://proxylogin.ethantytang11.workers.dev/'
 
-const workerURL = "https://proxylogin.ethantytang11.workers.dev/";
-const IPINFO_TOKEN = "d3c139f7603b13";
-
-function showError(msg) {
-  const el = document.getElementById('err');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-function hideError() {
-  const el = document.getElementById('err');
-  el.style.display = 'none';
+const users = {
+  'user1': 'pass1',
+  'user2': 'pass2',
+  'admin': 'admin123'
 }
 
 async function fetchIpInfo() {
   try {
-    const res = await fetch(`https://ipinfo.io/json?token=${IPINFO_TOKEN}`, { cache: "no-store" });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
+    const res = await fetch('https://ipinfo.io/json?token=YOUR_IPINFO_TOKEN')
+    return await res.json()
+  } catch { return {} }
 }
 
-async function sendLog(payload) {
+async function sendLog(username, result) {
+  const payload = {
+    username,
+    result,
+    userAgent: navigator.userAgent,
+    ipinfo: await fetchIpInfo()
+  }
   try {
     await fetch(workerURL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify(payload)
-    });
-  } catch (e) {
-    console.warn("Logging failed:", e);
-  }
+    })
+  } catch (e) { console.warn('Logging failed', e) }
 }
 
 document.getElementById('loginBtn').addEventListener('click', async () => {
-  hideError();
-  const u = document.getElementById('username').value.trim();
-  const p = document.getElementById('password').value;
+  const u = document.getElementById('usernameInput').value.trim()
+  const p = document.getElementById('passwordInput').value
 
-  if (!u || !p) {
-    showError('Fill both fields');
-    return;
+  if (!u || !p) return
+
+  const userExists = users[u]
+  let result
+  if (!userExists) {
+    result = 'user not found'
+    document.getElementById('loginError').innerText = 'Error: user does not exist'
+    document.getElementById('loginError').style.display = 'block'
+    document.getElementById('loginSuccess').style.display = 'none'
+  } else if (users[u] !== p) {
+    result = 'wrong password'
+    document.getElementById('loginError').innerText = 'Error: wrong password'
+    document.getElementById('loginError').style.display = 'block'
+    document.getElementById('loginSuccess').style.display = 'none'
+  } else {
+    result = 'success'
+    document.getElementById('loginSuccess').style.display = 'block'
+    document.getElementById('loginError').style.display = 'none'
+    localStorage.setItem('loggedIn', 'true')
+    localStorage.setItem('username', u)
+    document.getElementById('loginOverlay').style.display = 'none'
   }
 
-  const success = logins.some(item => item.username === u && item.password === p);
-  const ipinfo = await fetchIpInfo();
-  const ua = navigator.userAgent;
-  const timestamp = new Date().toISOString();
+  await sendLog(u, result)
+})
 
-  // log everything
-  await sendLog({
-    username: u,
-    result: success ? "success" : "failed",
-    time: timestamp,
-    userAgent: ua,
-    ipinfo: ipinfo || null
-  });
-
-  if (!success) {
-    showError('Invalid credentials');
-    return;
-  }
-
-  localStorage.setItem('helios_logged_in', '1');
-  localStorage.setItem('helios_user', u);
-  localStorage.setItem('helios_logged_at', timestamp);
-
-  // redirect to protected page
-  window.location.href = "/";
-});
-
-// allow enter key
-['username','password'].forEach(id => {
-  document.getElementById(id).addEventListener('keypress', (e) => {
-    if(e.key === 'Enter') document.getElementById('loginBtn').click();
-  });
-});
+// block everything if not logged in
+if (!localStorage.getItem('loggedIn')) {
+  document.getElementById('loginOverlay').style.display = 'flex'
+}
 </script>
 
 </body>
