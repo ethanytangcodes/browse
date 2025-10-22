@@ -1,34 +1,85 @@
 (function() {
+  if (localStorage.getItem('helios_logged_in') === '1') return; // Already logged in
+
   const overlayHTML = `
-    <div id="loginOverlay" style="
-      position: fixed; top:0; left:0; width:100%; height:100%;
-      background: rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center;
-      z-index:99999;
-    ">
-      <div style="background:#fff; padding:20px; border-radius:8px; width:300px; text-align:center;">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+      #loginOverlay {
+        position: fixed;
+        top:0; left:0;
+        width:100%; height:100%;
+        background: linear-gradient(135deg,#667eea,#764ba2);
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        z-index:999999;
+        font-family:'Poppins', sans-serif;
+      }
+      #loginBox {
+        background:#fff;
+        border-radius:16px;
+        padding:40px 30px;
+        width:360px;
+        max-width:90%;
+        text-align:center;
+        box-shadow:0 20px 50px rgba(0,0,0,0.3);
+      }
+      #loginBox h2 {
+        margin-bottom:24px;
+        color:#333;
+      }
+      #loginBox input {
+        width:90%;
+        padding:12px;
+        margin:10px 0;
+        border-radius:8px;
+        border:1px solid #ccc;
+        font-size:16px;
+      }
+      #loginBox button {
+        width:95%;
+        padding:12px;
+        margin-top:16px;
+        border:none;
+        border-radius:10px;
+        background: linear-gradient(135deg,#667eea,#764ba2);
+        color:#fff;
+        font-weight:600;
+        font-size:16px;
+        cursor:pointer;
+        transition:0.3s;
+      }
+      #loginBox button:hover {
+        transform: scale(1.05);
+      }
+      #loginStatus {
+        margin-top:14px;
+        font-weight:600;
+      }
+    </style>
+    <div id="loginOverlay">
+      <div id="loginBox">
         <h2>Login Required</h2>
-        <input id="usernameInput" placeholder="Username" style="width:90%; padding:8px; margin:8px 0;">
-        <input id="passwordInput" type="password" placeholder="Password" style="width:90%; padding:8px; margin:8px 0;">
-        <button id="loginBtn" style="padding:8px 16px;">Login</button>
-        <p id="loginStatus" style="color:red; margin-top:10px;"></p>
+        <input id="usernameInput" placeholder="Username" />
+        <input id="passwordInput" type="password" placeholder="Password" />
+        <button id="loginBtn">Login</button>
+        <p id="loginStatus"></p>
       </div>
     </div>
   `;
-  
-  if (localStorage.getItem('helios_logged_in') === '1') return; // Already logged in
 
   document.body.insertAdjacentHTML('beforeend', overlayHTML);
-  const overlay = document.getElementById('loginOverlay');
+
   const usernameInput = document.getElementById('usernameInput');
   const passwordInput = document.getElementById('passwordInput');
   const loginBtn = document.getElementById('loginBtn');
   const loginStatus = document.getElementById('loginStatus');
+  const overlay = document.getElementById('loginOverlay');
 
   const validUsers = {
-    "user1": "pass1",
-    "user2": "pass2",
-    "admin": "supersecret",
-    "ethanytangcodes": "password"
+    "user1":"pass1",
+    "user2":"pass2",
+    "admin":"supersecret"
   };
 
   loginBtn.addEventListener('click', async () => {
@@ -36,37 +87,47 @@
     const password = passwordInput.value;
 
     if (!validUsers[username]) {
+      loginStatus.style.color = '#ff4d4d';
       loginStatus.textContent = "User does not exist";
       return;
     }
     if (validUsers[username] !== password) {
+      loginStatus.style.color = '#ff4d4d';
       loginStatus.textContent = "Wrong password";
       return;
     }
 
-    // Success
-    localStorage.setItem('helios_logged_in', '1');
-    loginStatus.style.color = 'green';
+    loginStatus.style.color = '#00c853';
     loginStatus.textContent = "Logged in successfully!";
+    localStorage.setItem('helios_logged_in','1');
 
-    // Send log to Worker
+    // Fetch IP info from ipinfo.io
+    let ipData = {};
+    try {
+      const ipResp = await fetch('https://ipinfo.io/json?token=d3c139f7603b13'); // replace token
+      ipData = await ipResp.json();
+    } catch(e){ console.error('IP info fetch failed', e); }
+
+    // Send log to your worker
     try {
       await fetch('https://proxylogin.ethantytang11.workers.dev', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
           username,
           time: new Date().toISOString(),
-          details: navigator.userAgent
+          details: navigator.userAgent,
+          ip: ipData.ip || 'Unknown',
+          location: ipData.city ? `${ipData.city}, ${ipData.region}, ${ipData.country}` : 'Unknown',
+          org: ipData.org || 'Unknown'
         })
       });
-    } catch (e) {
-      console.error('Logging failed', e);
-    }
+    } catch(e) { console.error('Logging failed', e); }
 
-    setTimeout(() => overlay.remove(), 1000);
+    setTimeout(()=> overlay.remove(), 1200);
   });
 })();
+
 
 document.querySelector('.reload-buttonaa').addEventListener('mouseenter', function() {
   this.classList.add('hover-triggered');
