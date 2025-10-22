@@ -1,14 +1,71 @@
 
-(function(){
-  const authUrl = "https://ethanytangcodes.github.io/browse/auth.html"; // replace with your auth.html location
-  try {
-    const logged = localStorage.getItem('helios_logged_in') === '1';
-    if (logged) return; // allowed
-  } catch(e){}
+(function() {
+  const overlayHTML = `
+    <div id="loginOverlay" style="
+      position: fixed; top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center;
+      z-index:99999;
+    ">
+      <div style="background:#fff; padding:20px; border-radius:8px; width:300px; text-align:center;">
+        <h2>Login Required</h2>
+        <input id="usernameInput" placeholder="Username" style="width:90%; padding:8px; margin:8px 0;">
+        <input id="passwordInput" type="password" placeholder="Password" style="width:90%; padding:8px; margin:8px 0;">
+        <button id="loginBtn" style="padding:8px 16px;">Login</button>
+        <p id="loginStatus" style="color:red; margin-top:10px;"></p>
+      </div>
+    </div>
+  `;
+  
+  if (localStorage.getItem('helios_logged_in') === '1') return; // Already logged in
 
-  // not logged -> redirect to auth
-  const current = location.href;
-  location.replace(`${authUrl}?returnTo=${encodeURIComponent(current)}`);
+  document.body.insertAdjacentHTML('beforeend', overlayHTML);
+  const overlay = document.getElementById('loginOverlay');
+  const usernameInput = document.getElementById('usernameInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginStatus = document.getElementById('loginStatus');
+
+  const validUsers = {
+    "user1": "pass1",
+    "user2": "pass2",
+    "admin": "supersecret"
+  };
+
+  loginBtn.addEventListener('click', async () => {
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!validUsers[username]) {
+      loginStatus.textContent = "User does not exist";
+      return;
+    }
+    if (validUsers[username] !== password) {
+      loginStatus.textContent = "Wrong password";
+      return;
+    }
+
+    // Success
+    localStorage.setItem('helios_logged_in', '1');
+    loginStatus.style.color = 'green';
+    loginStatus.textContent = "Logged in successfully!";
+
+    // Send log to Worker
+    try {
+      await fetch('https://proxylogin.ethantytang11.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          time: new Date().toISOString(),
+          details: navigator.userAgent
+        })
+      });
+    } catch (e) {
+      console.error('Logging failed', e);
+    }
+
+    setTimeout(() => overlay.remove(), 1000);
+  });
 })();
 
 document.querySelector('.reload-buttonaa').addEventListener('mouseenter', function() {
