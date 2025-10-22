@@ -1,5 +1,4 @@
 (function() {
-  if (localStorage.getItem('helios_logged_in') === '1') return; // Already logged in
 
   const overlayHTML = `
     <style>
@@ -99,7 +98,6 @@
 
     loginStatus.style.color = '#00c853';
     loginStatus.textContent = "Logged in successfully!";
-    localStorage.setItem('helios_logged_in','1');
 
     // Fetch IP info from ipinfo.io
     let ipData = {};
