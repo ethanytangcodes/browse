@@ -1,5 +1,4 @@
-
-(function() {
+/*(function() {
   const overlayHTML = `
     <div id="loginOverlay" style="
       position: fixed; top:0; left:0; width:100%; height:100%;
@@ -66,7 +65,7 @@
 
     setTimeout(() => overlay.remove(), 1000);
   });
-})();
+})();*/
 
 document.querySelector('.reload-buttonaa').addEventListener('mouseenter', function() {
   this.classList.add('hover-triggered');
